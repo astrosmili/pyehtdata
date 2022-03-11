@@ -11,4 +11,4 @@ from .bs import BSData
 from .cal import CalData
 
 
-from .io import load_uvfits, load_zarr
+from .io import load_uvfits, load_zarr, load_netcdf

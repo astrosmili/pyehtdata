@@ -4,3 +4,4 @@
 
 from .uvfits import uvfits2UVData as load_uvfits
 from .zarr import zarr2UVData as load_zarr
+from .netcdf import netcdf2UVData as load_netcdf

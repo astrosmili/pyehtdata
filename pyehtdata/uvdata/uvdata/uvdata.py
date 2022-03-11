@@ -39,10 +39,10 @@ class UVData(object):
             self.vis = vis.copy()
 
         if bs is not None:
-            self.vis = vis.copy()
+            self.bs = bs.copy()
 
         if ca is not None:
-            self.vis = vis.copy()
+            self.ca = ca.copy()
 
     def __repr__(self):
         outlines = []
