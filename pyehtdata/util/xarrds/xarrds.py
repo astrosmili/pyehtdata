@@ -4,7 +4,6 @@
 '''
 
 import warnings
-from tkinter import E
 
 
 class XarrayDataset(object):
