@@ -12,7 +12,7 @@ class FreqData(XarrayDataset):
     mainly using xarray.Dataset
     """
     # Data type name
-    name = "Frequency Dataset"
+    datatype = "ehtdata_frequency"
 
     # Group Name of zarr file
     group = "frequency"

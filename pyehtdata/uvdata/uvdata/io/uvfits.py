@@ -53,6 +53,9 @@ def uvfits2UVData(inuvfits, scangap=None, nseg=2, outfile=None, group="", format
     import zarr
     from ..uvdata import UVData
 
+    if format not in ["zarr", "netcdf"]:
+        raise ValueError("available format is 'zarr' or 'netcdf'.")
+
     # check input files
     if isinstance(inuvfits, type("")):
         hdulist = pf.open(inuvfits)
@@ -69,17 +72,24 @@ def uvfits2UVData(inuvfits, scangap=None, nseg=2, outfile=None, group="", format
     # load data
     ghdu, antab, fqtab = uvfits2HDUs(hdulist)
 
-    # create zarr file
-    #z = zarr.open(outzarr, mode="w")
+    # create output file
+    if outfile is not None and mode == "w":
+        if format == "zarr":
+            import zarr
+            z = zarr.open(outfile, mode='w')
+        elif format == "netcdf":
+            import netCDF4
+            d = netCDF4.Dataset(outfile, mode="w")
+            d.close()
 
     def save_ds(ds):
         import os
         groupname = os.path.join(group, ds.group)
         if outfile is not None:
             if format == "zarr":
-                freqds.to_zarr(outfile, group=groupname, mode=mode)
+                ds.to_zarr(outfile, group=groupname, mode="a")
             elif format == "netcdf":
-                freqds.to_netcdf(outfile, group=groupname, mode=mode)
+                ds.to_netcdf(outfile, group=groupname, mode="a")
             del ds
 
     # Load info from HDU

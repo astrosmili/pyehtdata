@@ -92,7 +92,7 @@ class VisData(XarrayDataset):
         return ScanData(ds=ds)
 
     @classmethod
-    def load_dataset(cls, infile, engine="netcdf4", group=None, **args_open_dataset):
+    def load_dataset(cls, infile, engine="netcdf4", group=None, chunks="auto", **args_open_dataset):
         """
         Open a dataset from a specified input file. This library
         will use xarray.open_dataset() function, and assume that the input file
@@ -125,7 +125,7 @@ class VisData(XarrayDataset):
             groupname = group
 
         ds = open_dataset(infile, group=groupname,
-                          engine=engine, **args_open_dataset)
+                          engine=engine, chunks=chunks, **args_open_dataset)
 
         if engine in ["netcdf4", "h5netcdf"]:
             return ds.isel(ReIm=0) + 1j * ds.isel(ReIm=1)

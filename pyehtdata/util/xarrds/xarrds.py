@@ -35,7 +35,7 @@ class XarrayDataset(object):
                 self.datatype), UserWarning)
             self.ds.attrs["datatype"] = self.datatype
         elif ds.attrs["datatype"] != self.datatype:
-            ValueError("Input dataset has the datatype of '{0}', which is not compatible with this class." % (
+            ValueError("Input dataset has the datatype of '{0}', which is not compatible with this class.".format(
                 ds.attrs["datatype"]))
 
     def _repr_html_(self):
@@ -46,7 +46,7 @@ class XarrayDataset(object):
         return cls(ds=ds)
 
     @classmethod
-    def load_dataset(cls, infile, engine="netcdf4", group=None, **args_open_dataset):
+    def load_dataset(cls, infile, engine="netcdf4", group=None, chunks="auto", **args_open_dataset):
         """
         Open a dataset from a specified input file. This library
         will use xarray.open_dataset() function, and assume that the input file
@@ -79,7 +79,7 @@ class XarrayDataset(object):
             groupname = group
 
         ds = open_dataset(infile, group=groupname,
-                          engine=engine, **args_open_dataset)
+                          engine=engine, chunks=chunks, **args_open_dataset)
 
         return cls(ds=ds)
 
