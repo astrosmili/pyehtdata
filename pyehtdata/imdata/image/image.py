@@ -26,7 +26,10 @@ class Image(XarrayDataset):
         ds (xarray.Dataset): Image data
     '''
     # Data type name
-    name = "image"
+    datatype = "ehtdata_image"
+
+    # Default Group Name for the I/O
+    group = "image"
 
     # Data Set
     #   This supposed to include the data set
@@ -34,9 +37,6 @@ class Image(XarrayDataset):
 
     # data set dimension
     ds_dims = ("time", "freq", "pol", "y", "x")
-
-    # Group Name of zarr file
-    group = "image"
 
     def init_attrs(self):
         '''
@@ -722,7 +722,6 @@ class Image(XarrayDataset):
                gamma=0.5,
                vmax=None,
                vmin=None,
-               vscale="all",
                relative=False,
                angunit=None,
                fluxunit="Jy",
@@ -749,8 +748,6 @@ class Image(XarrayDataset):
             vmin(float):
                 The minimum value of the color contour.
                 If logscale = True, dyrange will be used to set vmin.
-            vscale(str):
-                This specify how to set vmax and vmin
             relative(boolean, default=True):
                 If True, vmin will be the relative value to the peak or vmax.
             fluxunit(string):
@@ -777,7 +774,7 @@ class Image(XarrayDataset):
         return plot_imshow(
             image=self,
             scale=scale, dyrange=dyrange, gamma=gamma,
-            vmax=vmax, vmin=vmin, vscale=vscale,
+            vmax=vmax, vmin=vmin,
             relative=relative,
             fluxunit=fluxunit, saunit=saunit, angunit=angunit,
             axisoff=axisoff, axislabel=axislabel,

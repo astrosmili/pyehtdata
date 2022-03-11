@@ -7,8 +7,8 @@ from logging import getLogger
 logger = getLogger(__name__)
 
 
-# Dictionary for Stokes labels and their IDs in UVFITS
-stokesid2name = {
+# Dictionary for pol labels and their IDs in UVFITS
+polid2name = {
     "+1": "I",
     "+2": "Q",
     "+3": "U",
@@ -22,12 +22,12 @@ stokesid2name = {
     "-7": "XY",
     "-8": "YX",
 }
-stokesname2id = {}
-for key in stokesid2name.keys():
-    stokesname2id[stokesid2name[key]] = int64(key)
+polname2id = {}
+for key in polid2name.keys():
+    polname2id[polid2name[key]] = int64(key)
 
 
-def uvfits2UVData(inuvfits, outzarr, scangap=None, nseg=2, printlevel=0):
+def uvfits2UVData(inuvfits, scangap=None, nseg=2, outfile=None, group="", format="netcdf", mode="w", printlevel=0):
     """
     Load an uvfits file. Currently, this function can read only single-source,
     single-frequency-setup, single-array data correctly.
@@ -35,8 +35,6 @@ def uvfits2UVData(inuvfits, outzarr, scangap=None, nseg=2, printlevel=0):
     Args:
         uvfits (string or pyfits.HDUList object):
             Input uvfits data
-        zarr (string):
-            Output zarr file for UVData
         scangap (float or astropy.units.Quantity, optional):
             Minimal time seperation between scans.
             If not specfied, this will be guessed from data segmentation (see nseg).
@@ -52,8 +50,8 @@ def uvfits2UVData(inuvfits, outzarr, scangap=None, nseg=2, printlevel=0):
         uvdata.UVData object
     """
     import astropy.io.fits as pf
-    from .zarr import zarr2UVData
     import zarr
+    from ..uvdata import UVData
 
     # check input files
     if isinstance(inuvfits, type("")):
@@ -72,32 +70,61 @@ def uvfits2UVData(inuvfits, outzarr, scangap=None, nseg=2, printlevel=0):
     ghdu, antab, fqtab = uvfits2HDUs(hdulist)
 
     # create zarr file
-    z = zarr.open(outzarr, mode="w")
+    #z = zarr.open(outzarr, mode="w")
+
+    def save_ds(ds):
+        import os
+        groupname = os.path.join(group, ds.group)
+        if outfile is not None:
+            if format == "zarr":
+                freqds.to_zarr(outfile, group=groupname, mode=mode)
+            elif format == "netcdf":
+                freqds.to_netcdf(outfile, group=groupname, mode=mode)
+            del ds
 
     # Load info from HDU
     #   Frequency
-    uvfits2freq(ghdu=ghdu, antab=antab, fqtab=fqtab).to_zarr(outzarr)
+    freqds = uvfits2freq(ghdu=ghdu, antab=antab, fqtab=fqtab)
     del fqtab
+    save_ds(freqds)
     #   Antenna
-    uvfits2ant(antab=antab).to_zarr(outzarr)
+    antds = uvfits2ant(antab=antab)
     del antab
+    save_ds(antds)
     #   Source
-    uvfits2src(ghdu=ghdu).to_zarr(outzarr)
+    srcds = uvfits2src(ghdu=ghdu)
+    save_ds(srcds)
     #   Visibilities
-    vistab = uvfits2vistab(ghdu=ghdu)
+    visds = uvfits2vis(ghdu=ghdu)
     del ghdu
-
-    # Detect scans and save visibilities and scaninfo to zarr file
-    vistab.set_scan(scangap=scangap, nseg=2)
-    vistab.to_zarr(outzarr)
-    vistab.gen_scandata().to_zarr(outzarr)
 
     # close HDU if this is loaded from a file
     if closehdu:
         hdulist.close()
 
-    # open zarr file and return it
-    return zarr2UVData(inzarr=outzarr)
+    # Detect scans and save visibilities and scaninfo to zarr file
+    visds.set_scan(scangap=scangap, nseg=2)
+    save_ds(visds)
+
+    scands = visds.gen_scandata()
+    save_ds(scands)
+
+    if outfile is None:
+        uvd = UVData(
+            freq=freqds,
+            src=srcds,
+            scan=scands,
+            vis=visds,
+            ant=antds
+        )
+        return uvd
+    else:
+        if format == "zarr":
+            from .zarr import zarr2UVData
+            return zarr2UVData(outfile, group=group)
+        elif format == "netcdf":
+            from .netcdf import netcdf2UVData
+            return netcdf2UVData(outfile, group=group)
 
 
 def uvfits2HDUs(hdulist):
@@ -139,7 +166,7 @@ def uvfits2HDUs(hdulist):
     return ghdu, antab, fqtab
 
 
-def uvfits2vistab(ghdu):
+def uvfits2vis(ghdu):
     """
     Load the array information from uvfits's AIPS AN table into the SMILI format.
 
@@ -149,22 +176,21 @@ def uvfits2vistab(ghdu):
     Returns:
         VisData: complex visibility in SMILI format
     """
-    from ..vis.vistab import VisTable
+    from ..vis.vis import VisData
     from astropy.time import Time
     from xarray import Dataset
     from numpy import float64, int32, int64, zeros, where, power
     from numpy import abs, sign, isinf, isnan, finfo, unique, modf, arange, min, diff
 
     # read visibilities
-    #    uvfits's original dimension is [data,dec,ra,if,ch,stokes,complex]
-    #    first, we reorganize the array to [stokes,if,ch]
-    Ndata, Ndec, Nra, dammy, dammy, Nstokes, dammy = ghdu.data.data.shape
+    #    uvfits's original dimension is [data,dec,ra,if,ch,pol,complex]
+    Ndata, Ndec, Nra, dammy, dammy, Npol, dammy = ghdu.data.data.shape
     del dammy
     if Nra > 1 or Ndec > 1:
         logger.warning(
             "GroupHDU has more than single coordinates (Nra, Ndec)=(%d, %d)." % (Nra, Ndec))
         logger.warning("We will pick up only the first one.")
-    vis_ghdu = ghdu.data.data[:, 0, 0, :]  # to [data,if,ch,stokes,complex]
+    vis_ghdu = ghdu.data.data[:, 0, 0, :]  # to [data,if,ch,pol,complex]
 
     # get visibilities, errors, and flag (flagged, removed,)
     vcmp = float64(vis_ghdu[:, :, :, :, 0]) + 1j * \
@@ -265,14 +291,14 @@ def uvfits2vistab(ghdu):
             "It will likely cause a problem, since SMILI assumes UVFITS for a single subarray.")
 
     # read polarizations
-    stokesids = ghdu.header["CDELT3"] * \
-        (arange(Nstokes)+1-ghdu.header["CRPIX3"])+ghdu.header["CRVAL3"]
-    stokes = [stokesid2name["%+d" % (stokesid)] for stokesid in stokesids]
+    polids = ghdu.header["CDELT3"] * \
+        (arange(Npol)+1-ghdu.header["CRPIX3"])+ghdu.header["CRVAL3"]
+    pol = [polid2name["%+d" % (polid)] for polid in polids]
 
     # form a data array
     ds = Dataset(
         data_vars=dict(
-            vis=(["data", "spw", "ch", "stokes"], vcmp)
+            vis=(["data", "spw", "ch", "pol"], vcmp)
         ),
         coords=dict(
             mjd=("data", mjd),
@@ -282,12 +308,12 @@ def uvfits2vistab(ghdu):
             wsec=("data", wsec),
             antid1=("data", antid1),
             antid2=("data", antid2),
-            flag=(["data", "spw", "ch", "stokes"], flag),
-            sigma=(["data", "spw", "ch", "stokes"], sigma),
-            stokes=(["stokes"], stokes),
+            flag=(["data", "spw", "ch", "pol"], flag),
+            sigma=(["data", "spw", "ch", "pol"], sigma),
+            pol=(["pol"], pol),
         )
     )
-    return VisTable(ds=ds.sortby(["mjd", "antid1", "antid2"]))
+    return VisData(ds=ds.sortby(["mjd", "antid1", "antid2"]))
 
 
 def uvfits2ant(antab):
@@ -348,7 +374,7 @@ def uvfits2ant(antab):
         msg = "POLTYA or POLTYB have more than a single polarization"
         logger.error(msg)
         raise ValueError(msg)
-    stokes = [pola[0], polb[0]]
+    pol = [pola[0], polb[0]]
 
     # assume all of them are ground array
     anttype = asarray(["g" for i in range(Nant)], dtype="U8")
@@ -364,7 +390,7 @@ def uvfits2ant(antab):
                 fr_el_coeff=("ant", fr_el_coeff),
                 fr_offset=("ant", fr_offset),
                 anttype=("ant", anttype),
-                stokes=("stokes", stokes)
+                pol=("pol", pol)
             ),
             attrs=dict(
                 name=name,

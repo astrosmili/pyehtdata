@@ -3,6 +3,9 @@
 '''
 '''
 
+import warnings
+from tkinter import E
+
 
 class XarrayDataset(object):
     """
@@ -27,6 +30,14 @@ class XarrayDataset(object):
             ds (xarray.Dataset): Input Dataset
         """
         self.ds = ds.copy()
+
+        if "datatype" not in ds.attrs.keys():
+            warnings.warn("Input dataset doesn't have an attribute for datatype. Adding the datatype of '{0}'".format(
+                self.datatype), UserWarning)
+            self.ds.attrs["datatype"] = self.datatype
+        elif ds.attrs["datatype"] != self.datatype:
+            ValueError("Input dataset has the datatype of '{0}', which is not compatible with this class." % (
+                ds.attrs["datatype"]))
 
     def _repr_html_(self):
         return self.ds._repr_html_()
@@ -102,17 +113,21 @@ class XarrayDataset(object):
             **args_to_zarr: other arguments for xarray.Dataset.to_zarr()
         """
         from xarray import open_zarr
+        import os
 
         if engine not in ["netcdf4", "h5netcdf"]:
             raise ValueError("available engines: 'netcdf4', 'h5netcdf'")
 
         if group is None:
-            groupname = cls.group
+            groupname = self.group
         else:
             groupname = group
 
+        if mode == "w" and os.path.isfile(outfile):
+            os.system("rm -f {0}".format(outfile))
+
         self.ds.to_netcdf(outfile, mode=mode, engine=engine,
-                          group=groupname, **args_to_netcdf)
+                          group=groupname, format="NETCDF4", **args_to_netcdf)
 
     def to_zarr(self, outfile, mode="w", group=None, **args_to_zarr):
         """
@@ -130,7 +145,7 @@ class XarrayDataset(object):
         from xarray import open_zarr
 
         if group is None:
-            groupname = cls.group
+            groupname = self.group
         else:
             groupname = group
 

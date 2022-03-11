@@ -3,8 +3,8 @@
 
 
 class UVData(object):
-    # zarr file
-    zarrfile = None
+    # filename if data are loading lazily
+    filename = "in memomry"
 
     # Meta data
     ant = None  # antenna meta data
@@ -17,10 +17,11 @@ class UVData(object):
     bs = None  # bi-spectra
     ca = None  # closure amplitudes
 
-    def __init__(self, zarrfile, ant=None, freq=None, scan=None, src=None,
+    def __init__(self, filename=None, ant=None, freq=None, scan=None, src=None,
                  vis=None, bs=None, ca=None):
 
-        self.zarrfile = zarrfile
+        if filename is not None:
+            self.filename = filename
 
         if ant is not None:
             self.ant = ant.copy()
@@ -45,7 +46,7 @@ class UVData(object):
 
     def __repr__(self):
         outlines = []
-        outlines.append("zarr file: %s" % (self.zarrfile))
+        outlines.append("filename: %s" % (self.filename))
         outlines.append("Attributes:")
 
         if self.ant is not None:
@@ -66,10 +67,19 @@ class UVData(object):
         return "\n".join(outlines)
 
     @classmethod
-    def load_zarr(cls, inzarr):
+    def load_zarr(cls, infile, group=""):
         from .io.zarr import zarr2UVData
-        return zarr2UVData(inzarr)
+        return zarr2UVData(infile, group=group)
 
-    def to_zarr(self, outzarr):
+    @classmethod
+    def load_netcdf(cls, infile, group=""):
+        from .io.netcdf import netcdf2UVData
+        return netcdf2UVData(infile, group=group)
+
+    def to_zarr(self, outfile, group="", mode="w"):
         from .io.zarr import UVData2zarr
-        UVData2zarr(self, outzarr)
+        UVData2zarr(self, outfile, group=group, mode=mode)
+
+    def to_netcdf(self, outfile, group="", mode="w"):
+        from .io.netcdf import UVData2netcdf
+        UVData2netcdf(self, outfile, group=group, mode=mode)

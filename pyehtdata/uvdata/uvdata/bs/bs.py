@@ -12,7 +12,7 @@ class BSData(XarrayDataset):
     similar to Visdaa.
     """
     # Data type name
-    name = "Bispectrum Dataset"
+    datatype = "ehtdata_bispectrum"
 
     # Group Name of zarr file
     group = "bispectrum"

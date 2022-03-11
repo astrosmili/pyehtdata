@@ -17,7 +17,7 @@ class ScanData(XarrayDataset):
     mainly using xarray.Dataset
     """
     # Data type name
-    name = "Scan Dataset"
+    datatype = "ehtdata_scan"
 
     # Group Name of zarr file
     group = "scan"

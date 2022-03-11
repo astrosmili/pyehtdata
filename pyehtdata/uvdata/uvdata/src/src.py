@@ -12,7 +12,7 @@ class SrcData(XarrayDataset):
     mainly using xarray.Dataset
     """
     # Data type name
-    name = "Source Dataset"
+    datatype = "ehtdata_source"
 
     # Group Name of zarr file
     group = "source"

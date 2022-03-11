@@ -12,7 +12,7 @@ class AntData(XarrayDataset):
     mainly using xarray.Dataset
     """
     # Data type name
-    name = "Antenna Dataset"
+    datatype = "ehtdata_antenna"
 
     # Group Name of zarr file
     group = "antenna"
@@ -32,9 +32,9 @@ class AntData(XarrayDataset):
             ["ant"], 0., "Coeffcient for the elevation angle to compute the field rotation angle."),
         fr_offset=(
             ["ant"], 0., "Offset angle in degree to compute the field rotation angle."),
-        sefd0=(["ant", "stokes"], 1000., "Zenith SEFD in Jy"),
+        sefd0=(["ant", "pol"], 1000., "Zenith SEFD in Jy"),
         tau0=(["ant"], 0., "Zenith opacity"),
-        stokes=(["stokes"], ["R", "L"], "Stokes Parameters"),
+        pol=(["pol"], ["R", "L"], "Polarization"),
     )
 
     def init_coords(self):
@@ -50,7 +50,6 @@ class AntData(XarrayDataset):
             self.ds = Dataset()
 
         coordkeys = self.ds.coords.keys()
-
         for key in self.coords_mandatory.keys():
             if key not in coordkeys:
                 coordshape = [

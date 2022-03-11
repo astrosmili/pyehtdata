@@ -13,7 +13,7 @@ class CalData(XarrayDataset):
     in a single dataset
     """
     # Data type name
-    name = "Calibration Dataset"
+    datatype = "ehtdata_calibration"
 
     # Group Name of zarr file
     group = "calibration"
