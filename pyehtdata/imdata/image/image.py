@@ -90,7 +90,7 @@ class Image(XarrayDataset):
             ixref = self.ds.attrs["i{}ref".format(axis)]
 
             # compute coordinates
-            self.ds.coords[axis] = (axis, sign*dx*(arange(nx)-ixref))
+            self.ds.coords[axis] = (axis, sign*dx*(1+arange(nx)-ixref))
 
     def chunk(self, chunks=None, **args):
         if chunks is None:
@@ -312,10 +312,10 @@ class Image(XarrayDataset):
         ixref = self.ds.attrs["ixref"]
         iyref = self.ds.attrs["iyref"]
 
-        xmax = -dx * (0 - ixref - 0.5)
-        xmin = -dx * (nx - 1 - ixref + 0.5)
-        ymax = dy * (ny - 1 - iyref + 0.5)
-        ymin = dy * (0 - iyref - 0.5)
+        xmax = -dx * (1 - ixref - 0.5)
+        xmin = -dx * (nx - ixref + 0.5)
+        ymax = dy * (ny - iyref + 0.5)
+        ymin = dy * (1 - iyref - 0.5)
 
         return asarray([xmax, xmin, ymin, ymax]) * factor
 
@@ -1034,11 +1034,11 @@ def gen_image(
 
     # ixref & iyref
     if ixref is None:
-        ixref = nx/2 - 0.5
+        ixref = nx/2 + 0.5
     else:
         ixref = float64(ixref)
     if iyref is None:
-        iyref = ny/2 - 0.5
+        iyref = ny/2 + 0.5
     else:
         iyref = float64(iyref)
 
