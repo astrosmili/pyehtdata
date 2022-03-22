@@ -593,10 +593,11 @@ class Image(XarrayDataset):
         Returns:
             imdata.Image: the convolved image if inplace==False.
         """
-        from jax.numpy import real, unravel_index, conj
-        from jax.numpy.fft import fftshift, ifftshift, fft2, ifft2
-        import jax
-        import dask
+        from numpy import real, unravel_index, conj
+        from numpy.fft import fftshift, ifftshift, fft2, ifft2
+        #import jax
+        from numpy import asarray
+        # import dask
 
         if inplace:
             outimage = self
@@ -623,15 +624,19 @@ class Image(XarrayDataset):
             return real(ifftshift(ifft2(fftshift(vis2d))))
 
         def convolve2d(imarr2d):
-            imarr2d = jax.lax.stop_gradient(imarr2d)
+            #imarr2d = jax.lax.stop_gradient(imarr2d)
             return doifft(dofft(imarr2d)*convkernel)
 
-        convolve2d = jax.jit(convolve2d)
+        #convolve2d = jax.jit(convolve2d)
 
         # run fft convolve
-        output = [dask.delayed(convolve2d)(imarr[unravel_index(i, shape=shape3d)])
-                  for i in range(nt*nf*ns)]
-        output = dask.array.array(dask.compute(output))
+        # output = [dask.delayed(convolve2d)(imarr[unravel_index(i, shape=shape3d)])
+        #          for i in range(nt*nf*ns)]
+        # output = dask.array.array(dask.compute(output))
+        output = asarray(
+            [convolve2d(imarr[unravel_index(i, shape=shape3d)])
+             for i in range(nt*nf*ns)]
+        )
         outimage.ds.image.data = output.reshape((nt, nf, ns, ny, nx))
 
         # return the output image
@@ -828,7 +833,7 @@ class Image(XarrayDataset):
             alpha=alpha, x0=x0, y0=y0, boxsize=boxsize, zorder=zorder
         )
 
-    @staticmethod
+    @ staticmethod
     def plot_scalebar(x, y, length, ha="center", color="white", lw=1,
                       **plotargs):
         '''
@@ -1118,7 +1123,7 @@ def load_hdf5(hdf5file, angunit="uas"):
 
     logger.info("Construct movie frame")
     logger.info("Note: so far hdf5 includes single pol (=I) and single band")
-    #logger.info("Note: need to invert the y direction")
+    # logger.info("Note: need to invert the y direction")
     for itime in tqdm.tqdm(range(Ntime)):
         mov.ds["image"].data[itime, 0, 0] = data[itime, ::-1]
 
