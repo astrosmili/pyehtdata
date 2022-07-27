@@ -130,8 +130,8 @@ def load_fits_casa(infits):
     #
     # Copy data from the fits hdu to the Image class instance img
     #
-    # img dims=["mjd",    "freq", "stokes", "y", "x"]
-    # hdu dims=["stokes", "freq", "y", "x"]
+    # img dims=["mjd",    "freq", "pol", "y", "x"]
+    # hdu dims=["pol", "freq", "y", "x"]
     #
     img.ds.image.data[0, :] = hdu.data.swapaxes(0, 1)
 
@@ -169,8 +169,8 @@ def to_fits_casa(image, outfits=None, overwrite=True, imjd=0):
     from ....util.units import conv
 
     #
-    # img dims=["mjd", "freq", "stokes", "y", "x"]
-    # hdu dims=["stokes", "freq", "y", "x"]
+    # img dims=["mjd", "freq", "pol", "y", "x"]
+    # hdu dims=["pol", "freq", "y", "x"]
     #
     # Get a slice of the Image Array for the given imjd,
     # swapping the axes from [freq, stokes, :, :] to [stokes, freq, :, :]

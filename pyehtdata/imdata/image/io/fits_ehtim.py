@@ -77,8 +77,8 @@ def load_fits_ehtim(infits):
     #
     # Copy data from the fits hdu to the Image class instance
     #
-    # outimage dims=["mjd", "freq", "stokes", "y", "x"]
-    # fits hdu dims=["stokes", "freq", "y", "x"]
+    # outimage dims=["mjd", "freq", "pol", "y", "x"]
+    # fits hdu dims=["pol", "freq", "y", "x"]
     #
     for istk in range(ns):
         outimage.ds.image[0, 0, istk] = hdulist[istk].data.copy()
@@ -118,7 +118,7 @@ def to_fits_ehtim(image, outfits=None, overwrite=True, idx=(0, 0)):
             "idx must have the length of 2; should be index for (MJD, FREQ)")
 
     # Get the number of stokes parameters
-    ns = image.ds.dims["stokes"]
+    ns = image.ds.dims["pol"]
 
     # Get the Image Array
     if len(idx) != 2:
@@ -135,7 +135,7 @@ def to_fits_ehtim(image, outfits=None, overwrite=True, idx=(0, 0)):
     hdulist = []
     # current EHTIM format assumes each HDU / stokes parameter
     for ipol in range(ns):
-        stokes = image.ds.coords["stokes"].data[ipol]
+        stokes = image.ds.coords["pol"].data[ipol]
 
         if ipol == 0:
             hdu = PrimaryHDU(imarr[ipol])

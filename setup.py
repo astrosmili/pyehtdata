@@ -24,7 +24,6 @@ setup(
         "matplotlib",
         "pandas",
         "xarray",
-        "jax",
         "zarr",
         "netcdf4",
         "h5py",
