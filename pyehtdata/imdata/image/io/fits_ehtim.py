@@ -92,7 +92,7 @@ def load_fits_ehtim(infits):
     return outimage
 
 
-def save_image_to_fits_ehtim(image, outfits=None, overwrite=True, idx=(0, 0)):
+def to_fits_ehtim(image, outfits=None, overwrite=True, idx=(0, 0)):
     '''
     save the image(s) to the image FITS file or HDUList in the eht-imaging
     library's format

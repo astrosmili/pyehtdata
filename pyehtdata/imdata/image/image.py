@@ -874,15 +874,15 @@ class Image(XarrayDataset):
         Returns:
             HDUList object if outfits is None
         '''
-        from .io.fits_ehtim import save_image_to_fits_ehtim
-        from .io.fits_casa import save_image_to_fits_casa
+        from .io.fits_ehtim import to_fits_ehtim
+        from .io.fits_casa import to_fits_casa
 
         if fitsfmt.lower() == "casa":
-            output = save_image_to_fits_casa(
+            output = to_fits_casa(
                 self, outfits=outfits, overwrite=overwrite, idx=idx
             )
         elif fitsfmt.lower() == "ehtim":
-            output = save_image_to_fits_ehtim(
+            output = to_fits_ehtim(
                 self, outfits=outfits, overwrite=overwrite, idx=idx
             )
         else:
