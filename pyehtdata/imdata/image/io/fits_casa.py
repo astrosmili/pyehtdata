@@ -203,13 +203,13 @@ def to_fits_casa(image, outfits=None, overwrite=True, imjd=0):
     hdu.header.set("OBJECT", image.ds.attrs["source"])
 
     hdu.header.set("CTYPE1", "RA---SIN")
-    hdu.header.set("CRVAL1", image.ds.attrs["obsra"]*rad2deg)
+    hdu.header.set("CRVAL1", image.ds.attrs["ra"]*rad2deg)
     hdu.header.set("CDELT1", -image.ds.attrs["dx"]*rad2deg)
     hdu.header.set("CRPIX1", image.ds.attrs["ixref"]+1)
     hdu.header.set("CUNIT1", "deg")
 
     hdu.header.set("CTYPE2", "DEC--SIN")
-    hdu.header.set("CRVAL2", image.ds.attrs["y"]*rad2deg)
+    hdu.header.set("CRVAL2", image.ds.attrs["dec"]*rad2deg)
     hdu.header.set("CDELT2", image.ds.attrs["dy"]*rad2deg)
     hdu.header.set("CRPIX2", image.ds.attrs["iyref"]+1)
     hdu.header.set("CUNIT2", "deg")
@@ -226,8 +226,8 @@ def to_fits_casa(image, outfits=None, overwrite=True, imjd=0):
     hdu.header.set("CRPIX4", 1.0)
     hdu.header.set("CUNIT4", '')
 
-    hdu.header.set("OBSRA", image.ds.attrs["x"]*rad2deg)
-    hdu.header.set("OBSDEC", image.ds.attrs["y"]*rad2deg)
+    hdu.header.set("OBSRA", image.ds.attrs["ra"]*rad2deg)
+    hdu.header.set("OBSDEC", image.ds.attrs["dec"]*rad2deg)
     hdu.header.set("FREQ", freq[ifref-1])
 
     mjd = image.data["mjd"].data[imjd]
