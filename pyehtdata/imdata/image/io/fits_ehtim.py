@@ -112,6 +112,7 @@ def to_fits_ehtim(image, outfits=None, overwrite=True, idx=(0, 0)):
     '''
     from astropy.io.fits import PrimaryHDU, ImageHDU, HDUList
     from ....util.units import conv
+    from numpy import float64
 
     if len(idx) != 2:
         raise ValueError(
@@ -151,10 +152,10 @@ def to_fits_ehtim(image, outfits=None, overwrite=True, idx=(0, 0)):
         hdu.header.set("CDELT2", image.ds.attrs["dy"]*rad2deg)
         hdu.header.set("OBSRA", image.ds.attrs["ra"]*rad2deg)
         hdu.header.set("OBSDEC", image.ds.attrs["dec"]*rad2deg)
-        hdu.header.set("FREQ", image.ds.coords["freq"].data[ifreq])
+        hdu.header.set("FREQ", float64(image.ds.coords["freq"].data[ifreq]))
         hdu.header.set("CRPIX1", image.ds.attrs["ixref"]+1)
         hdu.header.set("CRPIX2", image.ds.attrs["iyref"]+1)
-        hdu.header.set("MJD", image.ds.coords["mjd"].data[imjd])
+        hdu.header.set("MJD", float64(image.ds.coords["mjd"].data[imjd]))
         hdu.header.set("TELESCOP", image.ds.attrs["instrument"])
         hdu.header.set("BUNIT", "JY/PIXEL")
         hdu.header.set("STOKES", stokes)

@@ -167,6 +167,7 @@ def to_fits_casa(image, outfits=None, overwrite=True, imjd=0):
     from astropy.io.fits import PrimaryHDU, HDUList
     from astropy.time import Time
     from ....util.units import conv
+    from numpy import float64
 
     #
     # img dims=["mjd", "freq", "pol", "y", "x"]
@@ -230,7 +231,7 @@ def to_fits_casa(image, outfits=None, overwrite=True, imjd=0):
     hdu.header.set("OBSDEC", image.ds.attrs["dec"]*rad2deg)
     hdu.header.set("FREQ", freq[ifref-1])
 
-    mjd = image.data["mjd"].data[imjd]
+    mjd = float64(image.data["mjd"].data[imjd])
     tim = Time(mjd, format='mjd', scale='utc')  # Time object
     dt = tim.datetime64  # Same as tim.isot, but higher precision
     isot = str(dt)
